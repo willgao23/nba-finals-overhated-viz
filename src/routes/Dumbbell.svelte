@@ -16,7 +16,10 @@
   const yRect = yBase - 5;
 
   const isCommentLeft =
-    d.CommentStudentizedScore < d.StatStudentizedScr ? true : false;
+    +d.CommentStudentizedScore < +d.StatStudentizedScr ? true : false;
+
+  console.log(d);
+  console.log(isCommentLeft);
 
   let tXLeft = new Tween<number>(midpoint, {
     ...tweenParams,
