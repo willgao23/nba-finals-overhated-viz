@@ -168,17 +168,6 @@
           <AxisBottom {width} {height} {margin} {xScale} />
           <AxisLeft {yScale} {margin} />
         {/each}
-        {#if finder}
-          {#each finder.data() as d}
-            <circle
-              cx={finder.x()(d)}
-              cy={finder.y()(d)}
-              r="3"
-              fill="blue"
-              opacity="0.5"
-            />
-          {/each}
-        {/if}
       </svg>
     </div>
   {/if}
