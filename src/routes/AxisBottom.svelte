@@ -1,6 +1,6 @@
 <script lang="ts">
   // Props
-  let { xScale, margin, height, width } = $props();
+  let { xScale, margin, height, width, text } = $props();
 </script>
 
 {#if xScale}
@@ -28,5 +28,6 @@
         {tick}
       </text>
     {/each}
+    <text x={width / 2 - margin.right} y={40}>{text}</text>
   </g>
 {/if}

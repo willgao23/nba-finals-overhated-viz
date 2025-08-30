@@ -8,6 +8,10 @@
   import AxisLeft from "./AxisLeft.svelte";
   import type { NbaData } from "$lib/types";
   import type { Quadtree } from "d3-quadtree";
+  import { Tween } from "svelte/motion";
+  import { cubicOut } from "svelte/easing";
+  import { interpolate } from "d3-interpolate";
+  import Dumbbell from "./Dumbbell.svelte";
 
   // Import data
   let data: any[] = $state([]);
@@ -24,7 +28,7 @@
   // Set dimensions, margins, and scales
   let width = $state(800);
   const height = 800;
-  const margin = { top: 30, right: 30, bottom: 30, left: 200 };
+  const margin = { top: 30, right: 30, bottom: 50, left: 200 };
   const x_ticks = [-3, -2, -1, 0, 1, 2, 3];
 
   let x = $derived(
@@ -128,6 +132,18 @@
       "rgb(117, 209, 104)",
     ])
     .domain(legend_data);
+
+  // Animate dumbbells
+  const tweenParams = {
+    duration: 250,
+    easing: cubicOut,
+    interpolate,
+  };
+
+  let tX = new Tween<number>(0, {
+    ...tweenParams,
+    delay: 200,
+  });
 </script>
 
 <div class="wrapper">
@@ -155,39 +171,42 @@
         </div>
       {/if}
       <svg bind:this={svgElement} {width} {height}>
-        {#each data as d}
-          <rect
-            x={Math.min(x(d.StatStudentizedScr), x(d.CommentStudentizedScore))}
-            y={y(d.Player)! + y.bandwidth() / 2 - 3}
-            width={Math.abs(
-              x(d.StatStudentizedScr) - x(d.CommentStudentizedScore),
+        {#each data as d, i}
+          <Dumbbell
+            {d}
+            yBase={y(d.Player)! + y.bandwidth() / 2}
+            midpoint={x(
+              Math.abs(d.Difference) / 2 +
+                Math.min(d.CommentStudentizedScore, d.StatStudentizedScr),
             )}
-            height={5}
-            fill={d.Difference < 0 ? "rgb(217, 98, 98)" : "rgb(117, 209, 104)"}
-          />
-          <circle
-            cx={x(d.CommentStudentizedScore)}
-            cy={y(d.Player)! + y.bandwidth() / 2}
-            r="5"
-            fill={d.Difference < 0 ? "rgb(217, 98, 98)" : "rgb(117, 209, 104)"}
-          />
-          <rect
-            x={x(d.StatStudentizedScr)}
-            y={y(d.Player)! + y.bandwidth() / 2 - 5}
-            width="10"
-            height="10"
+            leftTarget={Math.min(
+              x(d.StatStudentizedScr),
+              x(d.CommentStudentizedScore),
+            )}
+            rightTarget={Math.max(
+              x(d.StatStudentizedScr),
+              x(d.CommentStudentizedScore),
+            )}
+            {i}
             fill={d.Difference < 0 ? "rgb(217, 98, 98)" : "rgb(117, 209, 104)"}
           />
         {/each}
-        <AxisBottom {width} {height} {margin} {xScale} />
+        <AxisBottom
+          {width}
+          {height}
+          {margin}
+          {xScale}
+          text={"Standard Deviations Away from the Mean"}
+        />
         <AxisLeft {yScale} {margin} />
         <g transform="translate({width - margin.right},130)">
           <rect
             x="-115"
             y={-20}
-            width="180"
+            width="145"
             height="150"
             fill="rgb(235, 235, 235)"
+            rx="10px"
           />
           <text x="-70" font-weight="bold"> Legend </text>
           {#each legend_data as d, i}
@@ -250,7 +269,7 @@
 
   .wrapper {
     width: 95%;
-    height: 800px;
+    height: 100%;
     margin: 0 auto;
     display: flex;
     justify-content: center;
