@@ -1,6 +1,6 @@
 <script lang="ts">
   import { csv } from "d3-fetch";
-  import { scaleBand, scaleLinear } from "d3-scale";
+  import { scaleBand, scaleLinear, scaleOrdinal } from "d3-scale";
   import { onMount } from "svelte";
   import { min, max } from "d3-array";
   import { quadtree } from "d3-quadtree";
@@ -117,18 +117,29 @@
       hoverY = pageY;
     }
   }
+
+  // Create legend
+  const legend_data = ["Net Rating", "Comment Ratio", "Overhated", "Overloved"];
+  const colors = scaleOrdinal()
+    .range([
+      "rgb(209, 209, 209)",
+      "rgb(209, 209, 209)",
+      "rgb(217, 98, 98)",
+      "rgb(117, 209, 104)",
+    ])
+    .domain(legend_data);
 </script>
 
 <div class="wrapper">
   {#if data && width && x && y}
-    <div class="label-wrapper">
+    <!-- <div class="label-wrapper">
       <div class="label-container">
         <div class="overhated side-label">Overhated</div>
       </div>
       <div class="label-container">
         <div class="overloved side-label">Overloved</div>
       </div>
-    </div>
+    </div> -->
     <div aria-hidden="true" onmousemove={handleMouseMove}>
       {#if hoveredElem && hoverX && hoverY}
         <div class="tooltip" style="left:{hoverX}px; top:{hoverY}px">
@@ -138,7 +149,8 @@
               100}<br />
             Comment Ratio: {Math.round(
               hoveredElem.CommentStudentizedScore * 100,
-            ) / 100}
+            ) / 100} <br />
+            Difference: {Math.round(hoveredElem.Difference * 100) / 100}
           </div>
         </div>
       {/if}
@@ -159,15 +171,48 @@
             r="5"
             fill={d.Difference < 0 ? "rgb(217, 98, 98)" : "rgb(117, 209, 104)"}
           />
-          <circle
-            cx={x(d.StatStudentizedScr)}
-            cy={y(d.Player)! + y.bandwidth() / 2}
-            r="5"
+          <rect
+            x={x(d.StatStudentizedScr)}
+            y={y(d.Player)! + y.bandwidth() / 2 - 5}
+            width="10"
+            height="10"
             fill={d.Difference < 0 ? "rgb(217, 98, 98)" : "rgb(117, 209, 104)"}
           />
-          <AxisBottom {width} {height} {margin} {xScale} />
-          <AxisLeft {yScale} {margin} />
         {/each}
+        <AxisBottom {width} {height} {margin} {xScale} />
+        <AxisLeft {yScale} {margin} />
+        <g transform="translate({width - margin.right},130)">
+          <rect
+            x="-115"
+            y={-20}
+            width="180"
+            height="150"
+            fill="rgb(235, 235, 235)"
+          />
+          <text x="-70" font-weight="bold"> Legend </text>
+          {#each legend_data as d, i}
+            {#if d !== "Comment Ratio"}
+              <rect
+                x="-105"
+                y={i * 30 + 10}
+                width="20"
+                height="20"
+                fill={colors(d) as string}
+              />
+            {/if}
+            {#if d == "Comment Ratio"}
+              <circle
+                cx="-95"
+                cy={i * 30 + 20}
+                r="10"
+                fill={colors(d) as string}
+              />
+            {/if}
+            <text class="legend-text" x="-80" y={25 + i * 30}>
+              {d}
+            </text>
+          {/each}
+        </g>
       </svg>
     </div>
   {/if}
